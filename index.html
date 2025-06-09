@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rule 34 Search</title>
+    <title>FlopRule 34</title>
     <link rel="icon" type="image/jpeg" href="Icon/Icon.jpg">
+    <meta name="description" content="FlopRule 34 - поиск и просмотр контента из Rule 34 с удобным интерфейсом и поддержкой тегов. Для пользователей 18+.">
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -29,6 +30,42 @@
             margin: 0 auto;
             padding: 20px;
             min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            width: 50px;
+            height: auto;
+            vertical-align: middle;
+        }
+
+        .header h1 {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 28px;
+            vertical-align: middle;
+        }
+
+        .warning {
+            background: #4a1a1a;
+            color: #ffcccc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .warning-buttons {
+            margin-top: 10px;
+        }
+
+        .warning-buttons button {
+            padding: 8px 16px;
+            margin: 0 10px;
         }
 
         .search-container {
@@ -106,8 +143,11 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--button-bg);
-            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
             z-index: 30;
         }
 
@@ -127,21 +167,6 @@
             right: 0;
         }
 
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 30;
-            display: none;
-        }
-
-        .sidebar-overlay.show {
-            display: block;
-        }
-
         .close-button {
             position: absolute;
             top: 20px;
@@ -151,6 +176,18 @@
             color: var(--text-color);
             font-size: 24px;
             cursor: pointer;
+        }
+
+        .sidebar a {
+            display: block;
+            color: var(--text-color);
+            padding: 10px 0;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .sidebar a:hover {
+            color: var(--accent-color);
         }
 
         .gallery {
@@ -174,8 +211,7 @@
 
         .gallery-item img {
             width: 100%;
-            height: 250px;
-            object-fit: cover;
+            height: auto; /* Изменено с фиксированного размера */
             display: block;
         }
 
@@ -192,24 +228,41 @@
             font-size: 14px;
         }
 
-        .tags {
+        .tags-modal {
             display: none;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.8);
-            color: var(--text-color);
-            padding: 10px;
-            font-size: 14px;
-            border-top: 2px solid var(--accent-color);
-            word-wrap: break-word;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 80%;
+            max-width: 500px;
         }
 
-        .tags.show {
+        .tags-modal.show {
             display: block;
-       24px;
+        }
+
+        .tags-modal .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 20px;
             cursor: pointer;
+        }
+
+        .tags-content {
+            word-wrap: break-word;
+            padding: 10px;
         }
 
         .error {
@@ -230,16 +283,43 @@
             padding: 12px 32px;
             font-size: 18px;
         }
+
+        .history {
+            margin-top: 20px;
+            padding: 10px;
+            background: var(--card-bg);
+            border-radius: 8px;
+        }
+
+        .history-item {
+            padding: 5px 0;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
+    <div class="warning" id="ageWarning">
+        <p>Вам есть 18 лет? Этот сайт содержит контент для взрослых.</p>
+        <div class="warning-buttons">
+            <button onclick="acceptAge()">Да</button>
+            <button onclick="rejectAge()">Нет</button>
+        </div>
+    </div>
+    <div class="header">
+        <img src="Icon/Icon.jpg" alt="FlopRule 34 Icon">
+        <h1>FlopRule 34</h1>
+    </div>
     <button class="menu-button" onclick="toggleSidebar()">☰</button>
     <div class="sidebar" id="sidebar">
         <button class="close-button" onclick="toggleSidebar()">✕</button>
-        <!-- Здесь будет содержимое бокового меню -->
+        <a href="/posts">Поиск</a>
+        <a href="/settings">Настройки</a>
     </div>
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-    <div class="search-container">
+    <div class="search-container" id="searchArea" style="display: none;">
         <div class="search-wrapper">
             <input type="text" id="searchTags" placeholder="Введите теги (например, brawl_stars -gay)" />
             <div id="autocomplete" class="autocomplete"></div>
@@ -252,11 +332,32 @@
     <div id="error" class="error"></div>
     <div id="gallery" class="gallery"></div>
     <button id="loadMore" class="load-more" onclick="loadMorePosts()">Загрузить ещё</button>
+    <div id="tagsModal" class="tags-modal">
+        <button class="close" onclick="closeTagsModal()">✕</button>
+        <div id="tagsContent" class="tags-content"></div>
+    </div>
+    <div id="history" class="history">
+        <h3>История поиска</h3>
+        <div id="historyList"></div>
+    </div>
 
     <script>
         let currentPage = 0;
         let currentTags = '';
         let debounceTimeout;
+        let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+
+        // Проверка возраста
+        function acceptAge() {
+            document.getElementById('ageWarning').style.display = 'none';
+            document.getElementById('searchArea').style.display = 'flex';
+            loadHistory();
+        }
+
+        function rejectAge() {
+            alert('Вам нужно быть старше 18 лет для доступа к этому сайту.');
+            window.location.href = 'https://google.com';
+        }
 
         // Загрузка тегов из URL при открытии страницы
         window.onload = () => {
@@ -265,7 +366,10 @@
             if (tags) {
                 document.getElementById('searchTags').value = tags.replace(/\+/g, ' ');
                 currentTags = tags;
+                acceptAge(); // Автоматически принимает возраст для URL-запросов
                 searchPosts(true);
+            } else {
+                document.getElementById('ageWarning').style.display = 'block';
             }
         };
 
@@ -281,7 +385,10 @@
                 currentTags = tags;
                 gallery.innerHTML = '';
                 loadMoreButton.style.display = 'none';
-                // Обновление URL
+                history.unshift(tags);
+                history = [...new Set(history)].slice(0, 10); // Ограничение до 10 записей
+                localStorage.setItem('searchHistory', JSON.stringify(history));
+                loadHistory();
                 history.pushState({}, '', `/posts?tags=${tags}`);
             } else {
                 currentPage++;
@@ -321,15 +428,10 @@
                     const tagsButton = document.createElement('button');
                     tagsButton.className = 'tags-button';
                     tagsButton.textContent = '🏷️';
-                    tagsButton.onclick = () => toggleTags(tagsDiv);
-
-                    const tagsDiv = document.createElement('div');
-                    tagsDiv.className = 'tags';
-                    tagsDiv.textContent = post.tags;
+                    tagsButton.onclick = () => showTagsModal(post.tags);
 
                     galleryItem.appendChild(img);
                     galleryItem.appendChild(tagsButton);
-                    galleryItem.appendChild(tagsDiv);
                     gallery.appendChild(galleryItem);
                 });
 
@@ -343,8 +445,15 @@
             }
         }
 
-        function toggleTags(tagsDiv) {
-            tagsDiv.classList.toggle('show');
+        function showTagsModal(tags) {
+            const modal = document.getElementById('tagsModal');
+            const content = document.getElementById('tagsContent');
+            content.textContent = tags;
+            modal.classList.add('show');
+        }
+
+        function closeTagsModal() {
+            document.getElementById('tagsModal').classList.remove('show');
         }
 
         function loadMorePosts() {
@@ -353,9 +462,7 @@
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
             sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
         }
 
         function addTag() {
@@ -431,14 +538,12 @@
             }, 300);
         });
 
-        // Скрыть автодополнение при клике вне поля
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-wrapper')) {
                 document.getElementById('autocomplete').style.display = 'none';
             }
         });
 
-        // Поиск по нажатию Enter
         document.getElementById('searchTags').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 document.getElementById('autocomplete').style.display = 'none';
@@ -446,7 +551,6 @@
             }
         });
 
-        // Автоматическая подгрузка при прокрутке
         window.addEventListener('scroll', () => {
             if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
                 const loadMoreButton = document.getElementById('loadMore');
@@ -455,6 +559,21 @@
                 }
             }
         });
+
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            history.forEach(tag => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.textContent = tag;
+                item.onclick = () => {
+                    document.getElementById('searchTags').value = tag;
+                    searchPosts(true);
+                };
+                historyList.appendChild(item);
+            });
+        }
     </script>
 </body>
 </html>
