@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FloprCre 3D - платформа для создания и редактирования 3D-моделей. Создавайте свои уникальные дизайны с легкостью!">
     <title>FloprCre 3D</title>
     <link href="https://fonts.cdnfonts.com/css/press-start-2p" rel="stylesheet">
     <style>
@@ -51,14 +52,15 @@
             justify-content: space-around;
         }
         button {
-            padding: 12px 24px;
-            font-size: 1em;
+            padding: 20px 40px;
+            font-size: 1.2em;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-family: 'Press Start 2P', cursive;
         }
         button:hover {
             background-color: #0056b3;
@@ -69,6 +71,7 @@
             background-color: #ffffff;
             border: 3px solid #b3d9ff;
             border-radius: 10px;
+            position: relative;
         }
         .links {
             display: flex;
@@ -82,9 +85,12 @@
             align-items: center;
         }
         .links img {
-            width: 20px;
-            height: 20px;
-            margin-right: 5px;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .favicon {
+            display: none;
         }
     </style>
 </head>
@@ -94,7 +100,7 @@
             <div id="canvas-container"></div>
             <div class="links">
                 <a href="https://vk.com/floprbot">
-                    <img src="https://avatars.mds.yandex.net/i?id=7095901137031e85988010ae525e6cf99469b88d-4919870-images-thumbs&n=13" alt="VK">
+                    <img src="https://w7.pngwing.com/pngs/789/697/png-transparent-vk-logo-russia-social-media-marketing-vkontakte-social-networking-service-vk-logo-miscellaneous-angle-text.png" alt="VK">
                     <span>Flopr</span>
                 </a>
                 <a href="https://t.me/floprV">
@@ -112,25 +118,48 @@
             </div>
         </div>
     </div>
+    <link rel="icon" type="image/png" href="Icon/Icon.png">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true }); // Прозрачный фон
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(renderer.domElement);
 
-        const geometry = new THREE.BoxGeometry();
+        const geometry = new THREE.BoxGeometry(3, 3, 3); // Увеличенный кубик
+        const edges = new THREE.EdgesGeometry(geometry);
+        const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+        const edgesMesh = new THREE.LineSegments(edges, edgeMaterial);
         const material = new THREE.MeshBasicMaterial({ color: 0x007bff });
         const cube = new THREE.Mesh(geometry, material);
+        cube.add(edgesMesh);
         scene.add(cube);
 
-        camera.position.z = 5;
+        camera.position.set(0, 0, 10);
+
+        let speed = { x: 0.03, y: 0.02, z: 0.01 };
+        let position = { x: 0, y: 0, z: 0 };
+        const bounds = {
+            minX: -container.clientWidth / 200,
+            maxX: container.clientWidth / 200,
+            minY: -container.clientHeight / 200,
+            maxY: container.clientHeight / 200,
+            minZ: -5,
+            maxZ: 5
+        };
 
         function animate() {
             requestAnimationFrame(animate);
+            position.x += speed.x;
+            position.y += speed.y;
+            position.z += speed.z;
+            if (position.x > bounds.maxX || position.x < bounds.minX) speed.x *= -1;
+            if (position.y > bounds.maxY || position.y < bounds.minY) speed.y *= -1;
+            if (position.z > bounds.maxZ || position.z < bounds.minZ) speed.z *= -1;
+            cube.position.set(position.x, position.y, position.z);
             cube.rotation.x += 0.01;
             cube.rotation.y += 0.01;
             renderer.render(scene, camera);
@@ -141,6 +170,10 @@
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
+            bounds.minX = -container.clientWidth / 200;
+            bounds.maxX = container.clientWidth / 200;
+            bounds.minY = -container.clientHeight / 200;
+            bounds.maxY = container.clientHeight / 200;
         });
     </script>
 </body>
